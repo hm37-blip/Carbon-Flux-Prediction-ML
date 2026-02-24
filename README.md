@@ -24,4 +24,5 @@ The following key environmental drivers were selected as input features:
 * Removed invalid flag values (-9999).
 * Built a high-frequency time-series dataset indexed by UTC timestamps using the `pandas` library.
 
-
+### 4. Clean Data 
+* address: https://raw.githubusercontent.com/hm37-blip/Carbon-Flux-Prediction-ML/refs/heads/main/final_cleaned_data.csv
