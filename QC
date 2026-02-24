@@ -1,0 +1,40 @@
+#data cleaning
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('AMF_US-Bo1_BASE_HH_2-1.csv', skiprows=2, na_values=-9999)
+df['TIMESTAMP']= pd.to_datetime(df['TIMESTAMP_START'], format='%Y%m%d%H%M')
+df.set_index('TIMESTAMP', inplace=True)
+df.drop(columns=['TIMESTAMP_START','TIMESTAMP_END'], inplace=True)
+print(df.head())
+
+target = 'NEE_PI' #Net Ecosystem Exchange
+features = [
+    'TA', #air temp
+    'SW_IN', #sun wave
+    'VPD_PI', #Vapor Pressure Deficit
+    'P', #precipitation
+    'TS_1', #soil temp
+    'SWC_1' #soil water content
+]
+data = df[[target ]+ features].copy()
+
+#make sure we define that 23:00 connects with 0:00, so is Dec and  Jan
+data['hour']=data.index.hour
+data['doy']=data.index.dayofyear
+
+data['hr_sin'] = np.sin(2*np.pi*data['hour']/24)
+data['hr_cos'] = np.cos(2*np.pi*data['hour']/24)
+data['doy_sin'] = np.sin(2*np.pi*data['doy']/365) 
+data['doy_cos'] = np.cos(2*np.pi*data['doy']/365)
+
+data.drop(columns=['hour','doy'], inplace=True)
+
+
+#through out missing value
+data_clean = data.dropna(subset=[target]).copy()
+#for envirnment data missing, we assume they are the same as 30min before
+data_clean= data_clean.ffill()
+# if a row has missing 1st value, we use row median
+data_clean= data_clean.fillna(data_clean.median())
+data_clean.to_csv("final_cleaned_data.csv")
