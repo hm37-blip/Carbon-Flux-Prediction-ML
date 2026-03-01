@@ -40,7 +40,24 @@ Despite increasing the feature space to 16 dimensions (including 1hr & 3hr lags)
 By plotting the actual measured $NEE$ against model predictions, I identified a recurring pattern of failure:
 *Tree-based models (RF/HGB) tend to predict the mean, failing to capture the volatile extremes of the carbon flux.
 *The models capture the general daily rhythm but consistently miss "Carbon Spikes" or rapid drops.
-picture：the struggled comparisom.png
+picture：https://github.com/hm37-blip/Carbon-Flux-Prediction-ML/blob/75a2adec52c36a7fe61d9e5b2fe283eff81d5a67/the%20struggled%20comparisom.png
+
+### 3. Pbservatipns
+Instead of blindly tuning hyperparameters, I conducted a Residual Audit on the top 100 prediction errors. This revealed significant data quality issues. Most importantly,The audit revealed physical impossibilities in the dataset:
+*The dataset recorded massive carbon uptake ($NEE < -90 \ \mu mol/m^2/s$) during midnight hours ($Solar \ Radiation \le 0$).
+These are likely sensor malfunctions or errors in the AmeriFlux gap-filling process. The models correctly ignored these "unphysical" values, which ironically penalized their $R^2$ scores.
+link:
+
+### 4. Next Steps
+*Data Cleaning: Implement a physics-based filter to remove "impossible" nighttime uptake values.
+*Outlier Detection: Use Isolation Forests to automatically flag suspect flux data.
+
+
+
+
+
+
+
 
 
 
