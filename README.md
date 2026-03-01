@@ -26,3 +26,21 @@ The following key environmental drivers were selected as input features:
 
 ### 4. Clean Data 
 * address: https://raw.githubusercontent.com/hm37-blip/Carbon-Flux-Prediction-ML/refs/heads/main/final_cleaned_data.csv
+
+## Model Benchmarking & The "R² Bottleneck"
+After cleaning the data and engineering **Time-Lagged Features** (1-hour & 3-hour offsets) to account for vegetation physiological memory, I conducted a head-to-head competition between two powerful ensemble models.
+
+### 1. Performance Summary
+| Model | R² Score (Baseline) | R² Score (with Lags) | Result |
+| :--- | :--- | :--- | :--- |
+| **Random Forest (RF)** | 0.4146 | **0.4202** | Marginal Improvement |
+Despite increasing the feature space to 16 dimensions (including 1hr & 3hr lags), the models reached a persistent accuracy ceiling of $R^2 \approx 0.42$.
+
+### 2. visualization
+By plotting the actual measured $NEE$ against model predictions, I identified a recurring pattern of failure:
+*Tree-based models (RF/HGB) tend to predict the mean, failing to capture the volatile extremes of the carbon flux.
+*The models capture the general daily rhythm but consistently miss "Carbon Spikes" or rapid drops.
+
+
+
+
