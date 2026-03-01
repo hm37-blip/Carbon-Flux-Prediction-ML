@@ -1,0 +1,31 @@
+#find where errors happend
+import pandas as pd
+import numpy as np
+results = pd.DataFrame({
+    "Actual":y_test_lag.values,
+    "Predicted": y_pred_hgb,
+    "Error": np.abs(y_test_lag.values- y_pred_hgb)
+},index=y_test_lag.index)
+
+top_errors = results.sort_values(by="Error", ascending= False).head(100)
+
+#check the weather variables
+error_analysis = top_errors.join(data_lagged[['TA', 'SW_IN', 'VPD_PI', 'P']])
+print(error_analysis.describe())
+
+error_analysis.index = pd.to_datetime(error_analysis.index)
+
+error_analysis['hour'] = error_analysis.index.hour
+print(f"errors  mostly happen in：")
+print(error_analysis['hour'].value_counts())
+#errors  mostly happen in：
+# hour
+#0    100 this indicates error mostly happend in midnight, which is very rediculus
+
+#download the data
+error_analysis['Error_Percentage'] = (error_analysis['Error'] / np.abs(error_analysis['Actual'])) * 100
+final_audit_report= error_analysis.sort_values(by="Error",ascending=False)
+file_name="top_100_carbon_errors.csv"
+final_audit_report.to_csv(file_name)
+from google.colab import files
+files.download(file_name)
