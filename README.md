@@ -46,7 +46,7 @@ picture：https://github.com/hm37-blip/Carbon-Flux-Prediction-ML/blob/75a2adec52
 Instead of blindly tuning hyperparameters, I conducted a Residual Audit on the top 100 prediction errors. This revealed significant data quality issues. Most importantly,The audit revealed physical impossibilities in the dataset:
 *The dataset recorded massive carbon uptake ($NEE < -90 \ \mu mol/m^2/s$) during midnight hours ($Solar \ Radiation \le 0$).
 These are likely sensor malfunctions or errors in the AmeriFlux gap-filling process. The models correctly ignored these "unphysical" values, which ironically penalized their $R^2$ scores.
-link:
+link: https://github.com/hm37-blip/Carbon-Flux-Prediction-ML/blob/2355ff293fdd3f310fe7230710a96b7c76f709bf/top_100_carbon_errors.csv
 
 ### 4. Next Steps
 *Data Cleaning: Implement a physics-based filter to remove "impossible" nighttime uptake values.
