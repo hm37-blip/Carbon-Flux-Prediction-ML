@@ -40,7 +40,7 @@ Despite increasing the feature space to 16 dimensions (including 1hr & 3hr lags)
 By plotting the actual measured $NEE$ against model predictions, I identified a recurring pattern of failure:
 *Tree-based models (RF/HGB) tend to predict the mean, failing to capture the volatile extremes of the carbon flux.
 *The models capture the general daily rhythm but consistently miss "Carbon Spikes" or rapid drops.
-
+picture：the struggled comparisom.png
 
 
 
