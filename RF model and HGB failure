@@ -1,0 +1,147 @@
+data_clean.columns = data_clean.columns.str.strip()
+target = 'NEE_PI' #Net Ecosystem Exchange
+features = [
+    'TA', #air temp
+    'SW_IN', #sun wave
+    'VPD_PI', #Vapor Pressure Deficit
+    'P', #precipitation
+    'TS_1', #soil temp
+    'SWC_1' #soil water content
+]
+
+#divide train set and test set
+split_point=int(len(data_clean)*0.8)
+
+train_data= data_clean.iloc[:split_point]
+test_data= data_clean.iloc[split_point:]
+
+x_train= train_data.drop(columns=[target])
+y_train= train_data[target]
+
+x_test= test_data.drop(columns=[target])
+y_test= test_data[target]
+
+print(f"trianset:{len(x_train)}")
+print(f"testset:{len(x_test)}")
+#trianset:119569, testset:29893
+
+from sklearn.preprocessing import StandardScaler
+
+if 'TIMESTAMP' in x_train.columns:
+  x_train=x_train.drop(columns=["TIMESTAMP"])
+if 'TIMESTAMP' in x_test.columns:
+  x_test=x_test.drop(columns=["TIMESTAMP"])
+
+scaler= StandardScaler()
+x_train_scaled= scaler.fit_transform(x_train)
+x_test_scaled= scaler.fit_transform(x_test)
+
+# randome forest with 100 estimator
+from sklearn.ensemble import RandomForestRegressor
+import joblib
+
+model_rf= RandomForestRegressor(n_estimators=100, random_state=1, n_jobs=-1)
+model_rf.fit(x_train_scaled,y_train)
+
+from sklearn.metrics import r2_score, mean_absolute_error
+
+y_pred = model_rf.predict(x_test_scaled)
+
+r2 = r2_score(y_test, y_pred)
+mae = mean_absolute_error(y_test, y_pred)
+
+print(f"R2 Score: {r2:.4f}")
+print(f"MAE: {mae:.4f}")
+# R2 score= 0.4146, MAE= 3.1056
+
+#enforce HGB
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.metrics import r2_score, mean_absolute_error
+#give model 300 trials to fix
+model_hgb = HistGradientBoostingRegressor(max_iter=300, learning_rate=0.1, random_state=2)
+model_hgb.fit(x_train_scaled, y_train)
+
+l_hgb = model_hgb.predict(x_train_scaled)
+
+y_pred_hgb = model_hgb.predict(x_test_scaled)
+
+r2_hgb=r2_score(y_test,y_pred_hgb)
+mae_hgb= mean_absolute_error(y_test,y_pred_hgb)
+
+print(f"RF R2: {r2:.4f}")
+print(f"HGB R2: {r2_hgb:.4f}")
+print(f"HGB MAE: {mae_hgb:.4f}")
+
+#RF R2: 0.4146 HGB R2: 0.3726, HGB MAE: 3.0826
+#HGB is making things wrose
+
+#consider plant os dynaic, I enter data from 1hr before and 3 har befpre
+lags= [2,6]
+cols_to_lag={'TA','SW_IN','VPD_PI'}
+
+for col in cols_to_lag:
+  for lag in lags:
+    data_clean[f'{col}_lag_{lag}'] = data_clean[col].shift(lag)
+
+  data_lagged=data_clean.dropna()
+
+from google.colab import files
+data_lagged.to_csv('data_lagged_with_memory.csv')
+files.download('data_lagged_with_memory.csv') #download the lagged data
+
+# prepare lagged data
+from sklearn.preprocessing import StandardScaler#这个也是，记得删掉
+
+X_lag = data_lagged.drop(columns=[target])
+y_lag = data_lagged[target]
+
+split_idx = int(len(X_lag) * 0.8)
+
+X_train_lag = X_lag.iloc[:split_idx]
+X_test_lag = X_lag.iloc[:split_idx] 
+X_test_lag = X_lag.iloc[split_idx:]
+y_train_lag = y_lag.iloc[:split_idx]
+y_test_lag = y_lag.iloc[split_idx:]
+
+X_train_num = X_train_lag.select_dtypes(include=[np.number])
+X_test_num = X_test_lag.select_dtypes(include=[np.number])
+
+scaler_lag = StandardScaler()
+x_train_scaled_lag = scaler_lag.fit_transform(X_train_num)
+x_test_scaled_lag = scaler_lag.transform(X_test_num)
+
+#run again
+rom sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
+
+model_rf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+model_rf.fit(x_train_scaled_lag, y_train_lag)
+model_hgb = HistGradientBoostingRegressor(max_iter=300, random_state=42)
+model_hgb.fit(x_train_scaled_lag, y_train_lag)
+
+y_pred_rf = model_rf.predict(x_test_scaled_lag)
+y_pred_hgb = model_hgb.predict(x_test_scaled_lag)
+
+print(f" New RF R2: {r2_score(y_test_lag, y_pred_rf):.4f}")
+print(f" New HGB R2: {r2_score(y_test_lag, y_pred_hgb):.4f}")
+# New RF R2: 0.4200, New HGB R2: 0.4141
+#no improve at all
+
+# show a diagram with top 150 timestamps ( 3 days)
+y_pred_rf = model_rf.predict(x_test_scaled_lag)
+y_pred_hgb = model_hgb.predict(x_test_scaled_lag)
+
+plt.figure(figsize=(14, 7))
+plt.plot(y_test_lag.values[:150], label='Actual (Sensor)', color='black', linewidth=2)
+plt.plot(y_pred_rf[:150], label=f'Random Forest (R2: {r2_score(y_test_lag, y_pred_rf):.2f})', color='blue', alpha=0.7)
+plt.plot(y_pred_hgb[:150], label=f'Gradient Boosting (R2: {r2_score(y_test_lag, y_pred_hgb):.2f})', color='red', alpha=0.7)
+
+plt.title('Comparison: How AI Learns Earth\'s Breathing', fontsize=15)
+plt.ylabel('Carbon Exchange (NEE)', fontsize=12)
+plt.xlabel('Time Steps (30-min intervals)', fontsize=12)
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.5)
+
+
+
+
+
