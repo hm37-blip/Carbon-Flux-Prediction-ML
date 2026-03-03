@@ -97,7 +97,11 @@ With an $R^2$ of 0.8578, the Random Forest model is now the official Benchmark B
 *Statistical Significance: The model explains 85.7% of the variance in Net Ecosystem Exchange.
 *Next Frontier: This score sets a high bar for the upcoming Deep Learning (LSTM) phase, where we will attempt to beat this statistical baseline using sequence-aware neural networks that model the "long-term memory" of the ecosystem.
 
-
+### The Roadmap to 0.90+: Beyond Statistical Baselines
+The robust performance of the Random Forest benchmark ($R^2 = 0.8578$) marks the limit of traditional, point-based statistical learning for this dataset. To break the 0.90 threshold and capture the true biological complexity of the US-Bo1 site, the next phase of this project will explore three advanced architectures:
+*Temporal Memory: Long Short-Term Memory (LSTM)：can automatically learn how multi-day environmental legacies (e.g., a rainfall event 48 hours ago) influence current carbon flux.
+*Physics-Informed Neural Networks (PINN)：can integrate the Farquhar-von Caemmerer-Berry (FvCB) photosynthesis equations into the model's loss function.
+*Temporal Fusion Transformer (TFT)：can deploy a Transformer-based architecture with multi-head attention
 
 
 
