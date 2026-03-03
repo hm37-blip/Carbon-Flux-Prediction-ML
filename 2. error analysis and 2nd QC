@@ -29,3 +29,56 @@ file_name="top_100_carbon_errors.csv"
 final_audit_report.to_csv(file_name)
 from google.colab import files
 files.download(file_name)
+
+#2nd qc
+data_lagged = pd.read_csv(file_path)
+
+limit_mask = (data_lagged['NEE_PI'] > -50) & (data_lagged['NEE_PI'] < 50)
+physics_mask = ~((data_lagged['SW_IN'] < 5) & (data_lagged['NEE_PI'] < -3))
+
+data_qc2 =data_lagged[limit_mask & physics_mask].copy()
+
+print(f'original data legth:{len(data_lagged)}')
+print(f'after 2nd qc there is {len(data_qc2)} left')
+print(f'we delete {len(data_lagged)-len(data_qc2)} points')
+#original data legth:149456
+#after 2nd qc there is 147009 left
+#we delete 2447 points
+
+# train RF with a shuffled data set
+from sklearn.model_selection import train_test_split
+
+from sklearn.ensemble import RandomForestRegressor
+X_train_shuff, X_test_shuff, y_train_shuff, y_test_shuff = train_test_split(
+    x_qc2, y_qc2, test_size=0.2, random_state=42
+)
+
+model_shuff = RandomForestRegressor(n_estimators=100, random_state=22, n_jobs=-1)
+model_shuff.fit(X_train_shuff, y_train_shuff)
+
+
+new_score = model_shuff.score(X_test_shuff, y_test_shuff)
+print(f" R2 after 2nd qc: {new_score:.4f}")
+# R2 after 2nd qc: 0.8578
+
+#test on HGB
+from sklearn.ensemble import HistGradientBoostingRegressor
+
+# retrain HGB
+model_hgb_final = HistGradientBoostingRegressor(
+    max_iter=100, 
+    random_state=22,
+    learning_rate=0.1,
+    max_depth=10
+)
+
+# train
+model_hgb_final.fit(X_train_shuff, y_train_shuff)
+
+#  see score
+hgb_new_score = model_hgb_final.score(X_test_shuff, y_test_shuff)
+print(f" HGB score after 2nd QC: {hgb_new_score:.4f}")
+print(f" RF score was: {new_score:.4f}")
+# HGB score after 2nd QC: 0.8285
+# RF score was: 0.8578
+
