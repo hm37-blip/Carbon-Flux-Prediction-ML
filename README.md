@@ -34,6 +34,8 @@ After cleaning the data and engineering **Time-Lagged Features** (1-hour & 3-hou
 | Model | R² Score (Baseline) | R² Score (with Lags) | Result |
 | :--- | :--- | :--- | :--- |
 | **Random Forest (RF)** | 0.4146 | **0.4202** | Marginal Improvement |
+| **HistGradientBoosting（HGB）** | 0.3726 | **0.4141** | Recovered but stagnant |
+
 Despite increasing the feature space to 16 dimensions (including 1hr & 3hr lags), the models reached a persistent accuracy ceiling of $R^2 \approx 0.42$.
 
 ### 2. visualization
